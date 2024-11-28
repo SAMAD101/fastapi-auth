@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>
+            {% block title %}
+            {% endblock %}
+        </title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                background-color: #f0f2f5;
+            }
+            .container {
+                max-width: 800px;
+                margin: 40px auto;
+                text-align: center;
+                background-color: white;
+                padding: 40px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .btn {
+                display: inline-block;
+                padding: 10px 20px;
+                margin: 10px;
+                border: none;
+                border-radius: 4px;
+                background-color: #1a73e8;
+                color: white;
+                text-decoration: none;
+                font-weight: bold;
+            }
+            .btn:hover {
+                background-color: #1557b0;
+            }
+            .form-container {
+                max-width: 400px;
+                margin: 40px auto;
+                background-color: white;
+                padding: 40px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            }
+            input {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                box-sizing: border-box;
+            }
+            .btn {
+                width: 100%;
+                padding: 10px;
+                border: none;
+                border-radius: 4px;
+                background-color: #1a73e8;
+                color: white;
+                font-weight: bold;
+                cursor: pointer;
+            }
+            .btn:hover {
+                background-color: #1557b0;
+            }
+            .links {
+                text-align: center;
+                margin-top: 20px;
+            }
+            .links a {
+                color: #1a73e8;
+                text-decoration: none;
+            }
+        </style>
+        {% block head %}
+        {% endblock %}
+    </head>
+    <body>
+        {% block body %}
+        {% endblock %}
+    </body>
+</html>

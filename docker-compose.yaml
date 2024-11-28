@@ -1,0 +1,10 @@
+services:
+  application:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fauth
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./data/fauth.db:/app/fauth.db"
