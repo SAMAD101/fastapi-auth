@@ -1,5 +1,5 @@
 services:
-  application:
+  fauth:
     build:
       context: .
       dockerfile: Dockerfile

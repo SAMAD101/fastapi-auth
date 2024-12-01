@@ -5,10 +5,16 @@
 {% block head %}{% endblock %}
 
 {% block body %}
-<div class="container">
-    <h1>fastapi-auth</h1>
-    <p>Please login or register to continue</p>
-    <a href="/login" class="btn">Login</a>
-    <a href="/register" class="btn">Register</a>
-</div>
+    <div class="container">
+        <h1>fastapi-auth</h1>
+        {% if user %}
+            <p>Welcome, {{ user.username }}</p>
+            <p>Role: {{ user.role }}</p>
+            <a href="/logout" class="btn">Logout</a>
+        {% else %}
+            <p>Please login or register to continue</p>
+            <a href="/login" class="btn">Login</a>
+            <a href="/register" class="btn">Register</a>
+        {% endif %}
+    </div>
 {% endblock %}

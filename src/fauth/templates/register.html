@@ -5,29 +5,29 @@
 {% block head %}{% endblock %}
 
 {% block body %}
-<div class="form-container">
-    <h2>Register</h2>
-    <form method="POST">
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" required>
+    <div class="form-container">
+        <h2>Register</h2>
+        <form method="POST" action="/register">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+    {#        <div class="form-group">#}
+    {#            <label for="confirm_password">Confirm Password</label>#}
+    {#            <input type="password" id="confirm_password" name="confirm_password" required>#}
+    {#        </div>#}
+            <button type="submit" class="btn">Register</button>
+        </form>
+        <div class="links">
+            <p>Already have an account? <a href="/login">Login here</a></p>
         </div>
-{#        <div class="form-group">#}
-{#            <label for="email">Email</label>#}
-{#            <input type="email" id="email" name="email" required>#}
-{#        </div>#}
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-{#        <div class="form-group">#}
-{#            <label for="confirm_password">Confirm Password</label>#}
-{#            <input type="password" id="confirm_password" name="confirm_password" required>#}
-{#        </div>#}
-        <button type="submit" class="btn">Register</button>
-    </form>
-    <div class="links">
-        <p>Already have an account? <a href="/login">Login here</a></p>
     </div>
-</div>
 {% endblock %}
