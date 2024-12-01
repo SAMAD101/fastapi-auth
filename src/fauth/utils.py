@@ -10,9 +10,8 @@ from sqlmodel import Session
 
 from typing import Optional
 
-from .database import SessionDep
 from .models import User
-from .schemas import TokenData, User as UserSchema
+from .schemas import TokenData
 
 
 SECRET_KEY: str = os.getenv("SECRET_KEY")
@@ -30,10 +29,10 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def authenticate_user(
-    username: str, password: str, db: Session = Depends(SessionDep)
+async def authenticate_user(
+    username: str, password: str, db: Session
 ) -> Optional[User]:
-    user = db.get(User, username)
+    user = db.query(User).filter(User.username == username).first()
     if not user or not verify_password(password, user.hashed_password):
         return None
     return user
@@ -50,9 +49,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-async def get_current_user(
-    token: Cookie(default=None), db: Session = Depends(SessionDep)
-) -> UserSchema | None:
+async def get_current_user(token: Cookie(default=None), db: Session) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -66,8 +63,7 @@ async def get_current_user(
         token_data = TokenData(username=username)
     except InvalidTokenError:
         raise credentials_exception
-    user = db.get(User, username)
+    user = db.query(User).filter(User.username == token_data.username).first()
     if user is None:
         raise credentials_exception
-    user = UserSchema.from_orm(user)
     return user

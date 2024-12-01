@@ -5,20 +5,18 @@ from fastapi.responses import (
     HTMLResponse,
     RedirectResponse,
 )
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from pathlib import Path
 from typing import Annotated
 from sqlmodel import Session
 from datetime import timedelta
 
-from .database import create_db_and_tables, SessionDep
+from .database import create_db_and_tables, get_db
 from .models import User
-from .schemas import Token, User as UserSchema
 from .utils import (
     get_password_hash,
-    authenticate_user,
     create_access_token,
+    authenticate_user,
     get_current_user,
     SECRET_KEY,
 )
@@ -38,8 +36,6 @@ BASE_DIR: Path = Path(__file__).resolve().parent
 
 templates: Jinja2Templates = Jinja2Templates(directory=str(Path(BASE_DIR, "templates")))
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
 
 @app.on_event("startup")
 def on_startup():
@@ -56,21 +52,11 @@ async def index_page(request: Request) -> Response:
     )
 
 
-@app.post("/token")
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(SessionDep)
-) -> Token:
-    user = authenticate_user(db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=timedelta(minutes=30)
-    )
-    return Token(access_token=access_token, token_type="bearer")
+@app.get("/protected", response_class=HTMLResponse)
+async def protected(request: Request, db: Session = Depends(get_db)):
+    user = await get_current_user(request.cookies.get("access_token"), db)
+    print(user)
+    return templates.TemplateResponse("index.html", {"request": request, "user": user})
 
 
 @app.get("/login", response_class=HTMLResponse)
@@ -83,9 +69,9 @@ async def login(
     request: Request,
     username: Annotated[str, Form()],
     password: Annotated[str, Form()],
-    db: Session = Depends(SessionDep),
+    db: Session = Depends(get_db),
 ) -> Response:
-    user = authenticate_user(db, username, password)
+    user = await authenticate_user(username, password, db)
     if not user:
         raise HTTPException(
             detail="Incorrect username or password",
@@ -94,14 +80,14 @@ async def login(
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=timedelta(minutes=30)
     )
-    response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    response = RedirectResponse(url="/protected", status_code=status.HTTP_302_FOUND)
     response.set_cookie(key="access_token", value=f"{access_token}", httponly=True)
     return response
 
 
-@app.get("/logout", response_class=RedirectResponse)
+@app.get("/logout", response_class=RedirectResponse, dependencies=[])
 async def logout(request: Request) -> Response:
-    response = RedirectResponse(url="/")
+    response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
     response.delete_cookie("access_token")
     return response
 
@@ -118,7 +104,7 @@ async def register(
     email: Annotated[str, Form()],
     password: Annotated[str, Form()],
     role: str = "user",
-    db: Session = Depends(SessionDep),
+    db: Session = Depends(get_db),
 ) -> Response:
     new_user = User(
         username=username,
@@ -126,44 +112,13 @@ async def register(
         hashed_password=get_password_hash(password),
         role=role,
     )
-    if db.get(User, username):
-        raise HTTPException(
-            detail="User with this username already exists",
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-        )
-    if db.query(User).filter(User.email == email).first():
-        raise HTTPException(
-            detail="User with this email already exists",
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-        )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    return RedirectResponse(url="/login")
-
-
-@app.get("/protected")
-async def protected_route(
-    request: Request,
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(SessionDep),
-):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-
-    user = db.query(User).filter(User.username == username).first()
-    if user is None:
-        raise credentials_exception
-
-    return {"message": "Welcome to protected route", "user": user.username}
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail=f"There was an error registering the user: {e}",
+        )
+    return RedirectResponse(url="/login")
