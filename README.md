@@ -1,8 +1,8 @@
 # fastapi-auth
-An elaborate authentication system in python using fastapi in Python.
+A fastapi based authentication using OAuth2 and JWT boilerplate code.
 
 ## Features
 
-- OAuth2 Authentication
+- OAuth2 and JWT based authentication
 - Password hashing using bcrypt
 - Two user roles: User and Superuser
